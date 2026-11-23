@@ -1,0 +1,15 @@
+# Quy tắc udev mẫu cho Raspberry Pi 5 trên thân robot thật (cố định symlink /dev/robot_*)
+# Cài đặt ở GĐ 5:
+#   1. Kiểm tra idVendor / idProduct / serial thực tế bằng:
+#        udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct|serial'
+#   2. Điền đúng mã thực tế rồi copy vào /etc/udev/rules.d/99-restaurant-robot.rules
+#   3. Chạy: sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# Board tầng đáy STM32 (ví dụ USB-UART CP2102 hoặc ST-Link VCP 0483:374b)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="REPLACE_WITH_STM32_SERIAL", SYMLINK+="robot_stm32", MODE="0666"
+
+# Board tầng trên ESP32-S3 / CH340 / USB JTAG
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", ATTRS{serial}=="REPLACE_WITH_ESP32_SERIAL", SYMLINK+="robot_esp32", MODE="0666"
+
+# LiDAR 2D (RPLIDAR C1 / LDROBOT LD19)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="REPLACE_WITH_LIDAR_SERIAL", SYMLINK+="robot_lidar", MODE="0666"

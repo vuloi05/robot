@@ -1,0 +1,25 @@
+# Mẫu phân quyền Mosquitto ACL khi bật bảo mật trên VPS
+# Tạo mật khẩu bằng lệnh:
+#   docker exec -it restaurant_mosquitto mosquitto_passwd -c /mosquitto/config/passwd fleet_server
+
+user fleet_server
+topic readwrite robot/#
+topic readwrite table/#
+topic readwrite dock/#
+
+user robot_01
+topic readwrite robot/robot_01/status
+topic write robot/robot_01/telemetry
+topic read robot/robot_01/cmd
+topic write robot/robot_01/cmd_ack
+topic write robot/robot_01/event
+
+user robot_01_esp32
+topic write robot/robot_01/supervisor
+
+user iot_table_01
+topic write table/table_01/call
+topic read table/table_01/led
+
+user iot_dock_01
+topic write dock/dock_01/status

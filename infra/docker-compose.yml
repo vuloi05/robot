@@ -1,0 +1,39 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: restaurant_mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -p 1883 -t 'infra/health' -m 'ok' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # =========================================================================
+  # Khi đóng gói VPS / Production ở Giai đoạn 4+, bỏ comment các service dưới:
+  # =========================================================================
+  # fleet_server:
+  #   build:
+  #     context: ../server
+  #   container_name: restaurant_fleet_server
+  #   restart: unless-stopped
+  #   depends_on:
+  #     mosquitto:
+  #       condition: service_healthy
+  #   env_file:
+  #     - ./.env
+  #   environment:
+  #     MQTT_HOST: mosquitto
+  #     MQTT_PORT: "1883"
+  #     DATABASE_URL: sqlite:///app/data/restaurant.db?mode=rwc
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./server_data:/app/data

@@ -1,0 +1,18 @@
+# Goal
+string cmd_id
+string task_id
+string task_type
+uint8 priority
+string speed_profile
+MissionStop[] stops
+---
+# Result
+bool success
+string final_state
+string message
+---
+# Feedback
+string fsm_state
+string current_waypoint_id
+uint16 current_stop_index
+float32 distance_remaining_m
