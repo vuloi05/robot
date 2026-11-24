@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="apriltag_dock">
+    <static>true</static>
+    <link name="dock_link">
+      <!-- Đế trạm sạc đặt sát sàn -->
+      <visual name="base_plate_visual">
+        <pose>0.06 0 0.01 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.28 0.36 0.02</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.18 0.20 0.24 1</ambient>
+          <diffuse>0.22 0.25 0.30 1</diffuse>
+        </material>
+      </visual>
+      <collision name="base_plate_collision">
+        <pose>0.06 0 0.01 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.28 0.36 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- Trụ đứng phía sau giữ bảng AprilTag & tiếp điểm sạc -->
+      <visual name="tower_visual">
+        <pose>-0.04 0 0.23 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.08 0.26 0.44</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.25 0.27 0.32 1</ambient>
+          <diffuse>0.30 0.33 0.38 1</diffuse>
+        </material>
+      </visual>
+      <collision name="tower_collision">
+        <pose>-0.04 0 0.23 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.08 0.26 0.44</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- Tiếp điểm sạc từ tính (Magnetic Pogo Pins) -->
+      <visual name="pogo_pad_left">
+        <pose>0.015 0.06 0.09 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.03 0.04</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.85 0.65 0.15 1</ambient>
+          <diffuse>0.90 0.70 0.20 1</diffuse>
+        </material>
+      </visual>
+      <visual name="pogo_pad_right">
+        <pose>0.015 -0.06 0.09 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.03 0.04</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.85 0.65 0.15 1</ambient>
+          <diffuse>0.90 0.70 0.20 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Biển AprilTag tag36h11 ID 0: tâm ở z = 0.32 m ngang tầm dock_camera_link -->
+      <!-- Kích thước 0.192m bao gồm 1 ô viền trắng nên phần mã đen 10x10 đúng 0.16m -->
+      <visual name="apriltag_plate">
+        <pose>0.002 0 0.32 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.004 0.192 0.192</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1.0 1.0 1.0 1.0</ambient>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>0.05 0.05 0.05 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://apriltag_dock/materials/textures/tag36h11_0.png</albedo_map>
+              <roughness>0.9</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

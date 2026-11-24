@@ -1,0 +1,82 @@
+# Bản đồ ngữ nghĩa (Semantic Waypoints) khớp Contract v1 trong docs/mqtt_protocol.md
+# Hệ tọa độ map: restaurant_floor_1 (đơn vị mét, rad)
+
+map_id: restaurant_floor_1
+
+waypoints:
+  dock_01:
+    role: DOCK
+    label: "Trạm sạc 01"
+    x: -6.70
+    y: -3.60
+    yaw: 0.0
+
+  pre_dock:
+    role: PRE_DOCK
+    label: "Điểm chờ trước trạm sạc"
+    x: -5.65
+    y: -3.60
+    yaw: 3.14159
+
+  kitchen_pickup:
+    role: KITCHEN_PICKUP
+    label: "Quầy bếp nhận món"
+    x: -4.20
+    y: 2.20
+    yaw: 0.0
+
+  kitchen_dishwash:
+    role: KITCHEN_DISHWASH
+    label: "Khu rửa bát đĩa"
+    x: -4.20
+    y: 3.80
+    yaw: 0.0
+
+  reception_standby:
+    role: RECEPTION
+    label: "Quầy lễ tân đón khách"
+    x: 4.20
+    y: 3.50
+    yaw: 3.14159
+
+  table_01:
+    role: TABLE
+    label: "Bàn 01"
+    x: -1.20
+    y: 1.35
+    yaw: 1.5708
+
+  table_02:
+    role: TABLE
+    label: "Bàn 02"
+    x: 1.80
+    y: 1.35
+    yaw: 1.5708
+
+  table_03:
+    role: TABLE
+    label: "Bàn 03"
+    x: 3.75
+    y: 0.20
+    yaw: 0.0
+
+  table_04:
+    role: TABLE
+    label: "Bàn 04"
+    x: -1.20
+    y: -1.35
+    yaw: -1.5708
+
+  table_05:
+    role: TABLE
+    label: "Bàn 05"
+    x: 1.80
+    y: -1.35
+    yaw: -1.5708
+
+  table_06:
+    role: TABLE
+    label: "Bàn 06"
+    x: 4.60
+    y: -1.35
+    yaw: -1.5708

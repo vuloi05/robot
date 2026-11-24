@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<robot name="restaurant_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find restaurant_robot_description)/urdf/inertial_macros.xacro"/>
+  <xacro:include filename="$(find restaurant_robot_description)/urdf/materials.xacro"/>
+
+  <!-- Thông số hình học chuẩn (tương thích 1-1 với hardware/README.md & controllers.yaml) -->
+  <xacro:property name="wheel_radius" value="0.0475"/>
+  <xacro:property name="wheel_width" value="0.032"/>
+  <xacro:property name="wheel_separation" value="0.32"/>
+  <xacro:property name="caster_radius" value="0.025"/>
+
+  <xacro:property name="base_size_x" value="0.38"/>
+  <xacro:property name="base_size_y" value="0.38"/>
+  <xacro:property name="base_size_z" value="0.12"/>
+  <xacro:property name="tray_size_x" value="0.40"/>
+  <xacro:property name="tray_size_y" value="0.40"/>
+  <xacro:property name="tray_thickness" value="0.02"/>
+
+  <!-- ===================================================================== -->
+  <!-- REP-105 Base Frames: base_footprint (mặt sàn z=0) -> base_link        -->
+  <!-- ===================================================================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Tầng đáy: Pin LiFePO4, động cơ, driver, STM32 (hạ thấp trọng tâm) -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="${base_size_x} ${base_size_y} ${base_size_z}"/>
+      </geometry>
+      <material name="chassis_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="${base_size_x} ${base_size_y} ${base_size_z}"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="10.0" x="${base_size_x}" y="${base_size_y}" z="${base_size_z}">
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <!-- ===================================================================== -->
+  <!-- 2 Bánh Chủ Động Differential Drive (đặt đúng trục tâm y = ±0.16 m)    -->
+  <!-- ===================================================================== -->
+  <xacro:macro name="drive_wheel" params="prefix y_offset">
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${prefix}_wheel_link"/>
+      <origin xyz="0.0 ${y_offset} 0.0" rpy="${-pi/2} 0 0"/>
+      <axis xyz="0 0 1"/>
+      <dynamics damping="0.1" friction="0.05"/>
+    </joint>
+
+    <link name="${prefix}_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="wheel_rubber"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_cylinder mass="0.6" length="${wheel_width}" radius="${wheel_radius}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="${prefix}_wheel_link">
+      <mu1>1.2</mu1>
+      <mu2>1.2</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:drive_wheel prefix="left" y_offset="${wheel_separation / 2.0}"/>
+  <xacro:drive_wheel prefix="right" y_offset="${-wheel_separation / 2.0}"/>
+
+  <!-- ===================================================================== -->
+  <!-- 2 Bánh Đa Hướng (Caster trước & sau, ma sát rất nhỏ, chạm sàn z=0)    -->
+  <!-- ===================================================================== -->
+  <xacro:macro name="caster_wheel" params="prefix x_offset">
+    <joint name="${prefix}_caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_caster_link"/>
+      <origin xyz="${x_offset} 0.0 ${-(wheel_radius - caster_radius)}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}_caster_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_sphere mass="0.15" radius="${caster_radius}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_sphere>
+    </link>
+
+    <gazebo reference="${prefix}_caster_link">
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:caster_wheel prefix="front" x_offset="0.145"/>
+  <xacro:caster_wheel prefix="rear" x_offset="-0.145"/>
+
+  <!-- ===================================================================== -->
+  <!-- 4 Trụ Nhôm Định Hình 2020 (bố trí thoáng góc quét LiDAR ở r <= 0.205m) -->
+  <!-- ===================================================================== -->
+  <xacro:macro name="chassis_pillar" params="name x_pos y_pos">
+    <joint name="${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+      <origin xyz="${x_pos} ${y_pos} 0.32125" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.02 0.02 0.4225"/>
+        </geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.02 0.02 0.4225"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_box mass="0.25" x="0.02" y="0.02" z="0.4225">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_box>
+    </link>
+  </xacro:macro>
+
+  <xacro:chassis_pillar name="pillar_fl" x_pos="0.135" y_pos="0.135"/>
+  <xacro:chassis_pillar name="pillar_fr" x_pos="0.135" y_pos="-0.135"/>
+  <xacro:chassis_pillar name="pillar_rl" x_pos="-0.135" y_pos="0.135"/>
+  <xacro:chassis_pillar name="pillar_rr" x_pos="-0.135" y_pos="-0.135"/>
+
+  <!-- ===================================================================== -->
+  <!-- Tầng Khay 1 (z_world = 0.39 m) & Khay 2 (z_world = 0.58 m)            -->
+  <!-- ===================================================================== -->
+  <joint name="tray_1_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="tray_1_link"/>
+    <origin xyz="0.0 0.0 0.3425" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tray_1_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${tray_size_x} ${tray_size_y} ${tray_thickness}"/>
+      </geometry>
+      <material name="tray_white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${tray_size_x} ${tray_size_y} ${tray_thickness}"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="0.9" x="${tray_size_x}" y="${tray_size_y}" z="${tray_thickness}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <joint name="tray_2_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="tray_2_link"/>
+    <origin xyz="0.0 0.0 0.5325" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tray_2_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${tray_size_x} ${tray_size_y} ${tray_thickness}"/>
+      </geometry>
+      <material name="tray_white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${tray_size_x} ${tray_size_y} ${tray_thickness}"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="0.9" x="${tray_size_x}" y="${tray_size_y}" z="${tray_thickness}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <!-- ===================================================================== -->
+  <!-- Đầu Màn Hình Cảm Ứng 7-inch Kiosk (z_world = 0.69 m)                  -->
+  <!-- ===================================================================== -->
+  <joint name="head_screen_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="head_screen_link"/>
+    <origin xyz="0.06 0.0 0.6425" rpy="0 -0.25 0"/>
+  </joint>
+
+  <link name="head_screen_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.19 0.12"/>
+      </geometry>
+      <material name="screen_teal"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.19 0.12"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="0.45" x="0.04" y="0.19" z="0.12">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <!-- Cảm biến & Điều khiển ros2_control Gazebo -->
+  <xacro:include filename="$(find restaurant_robot_description)/urdf/sensors.xacro"/>
+  <xacro:include filename="$(find restaurant_robot_description)/urdf/ros2_control.xacro"/>
+
+</robot>
